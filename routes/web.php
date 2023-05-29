@@ -67,9 +67,11 @@ Route::get('/youtube/update-title', function () {
                 return 'Error';
             }
         } catch (Google_Service_Exception $e) {
-            Log::alert('A service error occurred: ', $e->getMessage());
+            Log::alert('A service error occurred: ');
+            Log::alert($e->getMessage());
         } catch (Google_Exception $e) {
-            Log::alert('A service error occurred: ', $e->getMessage());
+            Log::alert('A service error occurred: ');
+            Log::alert($e->getMessage());
         }
         
     }

@@ -52,7 +52,7 @@ Route::get('/youtube/update-title', function () {
                 $updateResponse = $youtube->videos->update("snippet", $video);
                 $responseLog = $updateResponse['snippet'];
 
-                Log::debug($responseLog);
+                Log::debug(print_r($responseLog));
 
                 return 'Video title updated successfully!';
             } else {

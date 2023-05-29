@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class MainController extends Controller
 {
@@ -73,14 +74,14 @@ class MainController extends Controller
             $videoId    = request()->get('v');
             $newTitle   = request()->get('title');
 
-            $request->session()->put('videoId', $videoId);
-            $request->session()->put('newTitle', $newTitle);
+            Session::put('videoId', $videoId);
+            Session::put('newTitle', $newTitle);
         } else {
-            if ($request->session()->has('videoId')) {
-                $videoId = $request->session()->get('videoId');
+            if (Session::has('videoId')) {
+                $videoId = Session::get('videoId');
             }
-            if ($request->session()->has('newTitle')) {
-                $newTitle = $request->session()->get('newTitle');
+            if (Session::has('newTitle')) {
+                $newTitle = Session::get('newTitle');
             }
             Log::alert("No videoID or NewTitle");
         }

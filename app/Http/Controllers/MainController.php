@@ -76,11 +76,11 @@ class MainController extends Controller
             Log::alert("No videoID or NewTitle");
         }
 
-            $client = new Google_Client();
+            $client = new \Google_Client();
             $client->setClientId(config('google.client_id'));
             $client->setClientSecret(config('google.client_secret'));
             $client->setRedirectUri(config('google.redirect_url'));
-            $client->setScopes(Google_Service_YouTube::YOUTUBE_FORCE_SSL);
+            $client->setScopes(\Google_Service_YouTube::YOUTUBE_FORCE_SSL);
         
             if (!request()->has('code')) {
                 $authUrl = $client->createAuthUrl();
@@ -91,7 +91,7 @@ class MainController extends Controller
                 $client->setAccessToken($token);
         
                 // Update video title
-                $youtube = new Google_Service_YouTube($client);
+                $youtube = new \Google_Service_YouTube($client);
         
                 try{
                     

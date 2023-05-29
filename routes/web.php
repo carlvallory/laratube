@@ -46,11 +46,11 @@ Route::get('/youtube/update-title', function () {
                 $video = $listResponse[0];
                 $videoSnippet = $video->getSnippet();
 
-                dd($videoSnippet);
-                Log::debug(json_decode($videoSnippet));
+                dd($videoSnippet->title);
+                Log::debug($videoSnippet->title);
 
-                $videoSnippet['title']      = 'NEW_VIDEO_TITLE';
-                $videoSnippet['categoryId'] = '1'; 
+                $videoSnippet->title      = 'NEW_VIDEO_TITLE';
+                $videoSnippet->categoryId = '1'; 
                 
                 $updateResponse = $youtube->videos->update("snippet", $video);
                 $responseLog = $updateResponse['snippet'];

@@ -46,7 +46,7 @@ Route::get('/youtube/update-title', function () {
                 $video = $listResponse[0];
                 $videoSnippet = $video->getSnippet();
 
-                Log::debug($videoSnippet);
+                Log::debug(print_r($videoSnippet));
 
                 $videoSnippet['title']      = 'NEW_VIDEO_TITLE';
                 $videoSnippet['categoryId'] = '1';

@@ -41,7 +41,7 @@ Route::get('/youtube/update-title', function () {
             
             $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
 
-            if (empty($listResponse)) {
+            if (!empty($listResponse)) {
 
                 $video = $listResponse[0];
                 $videoSnippet = $video->getSnippet();

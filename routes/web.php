@@ -52,15 +52,15 @@ Route::get('/youtube/update-title', function () {
                 } else {
                     array_push($tags, "tag1", "tag2");
                 }
+                $videoSnippet['title']      = 'NEW_VIDEO_TITLE';
+                $videoSnippet['categoryId'] = '1';
+                $videoSnippet['tags']       = $tags;
                 
-                $videoSnippet['tags'] = $tags;
-                $videoSnippet->setTitle('NEW_VIDEO_TITLE');
-                $videoSnippet->setSnippet($videoSnippet);
                 
                 $updateResponse = $youtube->videos->update("snippet", $video);
-                $responseTags = $updateResponse['snippet']['tags'];
+                $responseLog = $updateResponse['snippet'];
 
-                Log::debug($responseTags);
+                Log::debug($responseLog);
 
                 return 'Video title updated successfully!';
             } else {

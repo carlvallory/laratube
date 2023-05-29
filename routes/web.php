@@ -2,6 +2,7 @@
 // use Google_Client;
 // use Google_Service_YouTube;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,13 +34,43 @@ Route::get('/youtube/update-title', function () {
 
         // Update video title
         $youtube = new Google_Service_YouTube($client);
-        $videoId = '4UTl0tnMePc';
-        $video = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
-        $videoSnippet = $video[0]->getSnippet();
-        $videoSnippet->setTitle('NEW_VIDEO_TITLE');
-        $video->setSnippet($videoSnippet);
-        $youtube->videos->update('snippet', $video);
 
-        return 'Video title updated successfully!';
+        try{
+
+            $videoId = '4UTl0tnMePc';
+            
+            $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
+
+            if (empty($listResponse)) {
+
+                $video = $listResponse[0];
+                $videoSnippet = $video->getSnippet();
+
+                $tags = $videoSnippet['tags'];
+                if (is_null($tags)) {
+                    $tags = array("tag1", "tag2");
+                } else {
+                    array_push($tags, "tag1", "tag2");
+                }
+                
+                $videoSnippet['tags'] = $tags;
+                $videoSnippet->setTitle('NEW_VIDEO_TITLE');
+                $videoSnippet->setSnippet($videoSnippet);
+                
+                $updateResponse = $youtube->videos->update("snippet", $video);
+                $responseTags = $updateResponse['snippet']['tags'];
+
+                Log::debug($responseTags);
+
+                return 'Video title updated successfully!';
+            } else {
+                return 'Error';
+            }
+        } catch (Google_Service_Exception $e) {
+            Log::alert('A service error occurred: ', $e->getMessage());
+        } catch (Google_Exception $e) {
+            Log::alert('A service error occurred: ', $e->getMessage());
+        }
+        
     }
 });

@@ -48,6 +48,7 @@ Route::get('/youtube/update-title', function () {
 
                 $videoSnippet['title']      = 'NEW_VIDEO_TITLE';
                 $videoSnippet['categoryId'] = '1';
+                $videoSnippet['tags'] = ['livestream', 'games', 'irl'];
                 
                 
                 $updateResponse = $youtube->videos->update("snippet", $video);

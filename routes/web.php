@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 
 
-Route::get('/youtube/update-title', function () {
+Route::get('/youtube/update-title/{videoId}/{newTitle}', function ($videoId, $newTitle) {
     $client = new Google_Client();
     $client->setClientId(config('google.client_id'));
     $client->setClientSecret(config('google.client_secret'));
@@ -36,8 +36,6 @@ Route::get('/youtube/update-title', function () {
         $youtube = new Google_Service_YouTube($client);
 
         try{
-
-            $videoId = '4UTl0tnMePc';
             
             $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
 
@@ -46,13 +44,15 @@ Route::get('/youtube/update-title', function () {
                 $video = $listResponse[0];
                 $videoSnippet = $video->getSnippet();
 
-                $videoSnippet->title      = 'NEW_VIDEO_TITLE';
+                Log::debug($videoSnippet->title);
+
+                $videoSnippet->title      = $newTitle;
                 $videoSnippet->categoryId = '1'; 
                 
                 $updateResponse = $youtube->videos->update("snippet", $video);
                 $responseLog = $updateResponse['snippet'];
 
-                Log::debug(print_r($responseLog));
+                Log::debug($responseLog->title);
 
                 return 'Video title updated successfully!';
             } else {

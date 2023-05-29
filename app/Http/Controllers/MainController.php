@@ -72,7 +72,16 @@ class MainController extends Controller
         if (!request()->has('v') && !request()->has('title')) {
             $videoId    = request()->get('v');
             $newTitle   = request()->get('title');
+
+            $request->session()->put('videoId', $videoId);
+            $request->session()->put('newTitle', $newTitle);
         } else {
+            if ($request->session()->has('videoId')) {
+                $videoId = $request->session()->get('videoId');
+            }
+            if ($request->session()->has('newTitle')) {
+                $newTitle = $request->session()->get('newTitle');
+            }
             Log::alert("No videoID or NewTitle");
         }
 

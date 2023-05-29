@@ -70,7 +70,7 @@ class MainController extends Controller
      */
     public function update(Request $request)
     {
-        if (!request()->has('v') && !request()->has('title')) {
+        if (request()->has('v') && request()->has('title')) {
             $videoId    = request()->get('v');
             $newTitle   = request()->get('title');
 
@@ -84,6 +84,7 @@ class MainController extends Controller
                 $newTitle = Session::get('newTitle');
             }
             Log::alert("No videoID or NewTitle");
+            Log::debug($videoId, $newTitle);
         }
 
             $client = new \Google_Client();

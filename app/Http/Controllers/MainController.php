@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MainController extends Controller
 {
@@ -68,8 +69,12 @@ class MainController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $videoId = $request->videoId; 
-        $newTitle = $request->newTitle;
+        if (!request()->has('videoId') && !request()->has('newTitle')) {
+            $videoId    = request()->get('videoId'); 
+            $newTitle   = request()->get('newTitle');
+        } else {
+            Log::alert("No videoID or NewTitle");
+        }
 
             $client = new Google_Client();
             $client->setClientId(config('google.client_id'));

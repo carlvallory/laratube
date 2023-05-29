@@ -67,7 +67,7 @@ class MainController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         if (!request()->has('v') && !request()->has('title')) {
             $videoId    = request()->get('v');

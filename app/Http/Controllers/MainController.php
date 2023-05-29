@@ -84,7 +84,7 @@ class MainController extends Controller
                 $newTitle = Session::get('newTitle');
             }
             Log::alert("No videoID or NewTitle");
-            Log::debug($videoId, $newTitle);
+            Log::debug($videoId);
         }
 
             $client = new \Google_Client();

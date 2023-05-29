@@ -69,9 +69,9 @@ class MainController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!request()->has('videoId') && !request()->has('newTitle')) {
-            $videoId    = request()->get('videoId'); 
-            $newTitle   = request()->get('newTitle');
+        if (!request()->has('video') && !request()->has('title')) {
+            $videoId    = request()->get('video'); 
+            $newTitle   = request()->get('title');
         } else {
             Log::alert("No videoID or NewTitle");
         }

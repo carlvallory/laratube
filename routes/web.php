@@ -16,4 +16,4 @@ use Illuminate\Support\Facades\Log;
 
 
 
-Route::get('/youtube/update-title/{videoId}/{newTitle}', [MainController::class, 'update']);
+Route::get('/youtube/update-title', [MainController::class, 'update']);

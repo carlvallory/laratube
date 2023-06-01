@@ -1,19 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Resources\MainResource;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Http\Resources\MainResource;
 
 class MainController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request)
     {
         $array = [ "return" => true ];
@@ -21,56 +17,6 @@ class MainController extends Controller
         return MainResource::collection($array);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request)
     {
         if (request()->has('v') && request()->has('title')) {
@@ -126,59 +72,39 @@ class MainController extends Controller
     
                     Log::debug($responseLog->title);
     
-                    $response = [ 
-                        'status' => 200, 
-                        'message' => 'Video title updated successfully!'
-                    ];
+                    $status = 200;
+                    $message = 'Video title updated successfully!';
+                    $response = [ $status, $message ];
                     return MainResource::collection($response);
-
                 } else {
-                    $response = [ 
-                        'status' => 500, 
-                        'message' => 'Empty Response'
-                    ];
-    
+                    $status = 500;
+                    $message = 'Empty Response';
+                    $response = [ $status, $message ];
                     return MainResource::collection($response);
                 }
+
             } catch (Google_Service_Exception $e) {
                 Log::alert('A service error occurred: ');
                 Log::alert($e->getMessage());
-                
-                $response = [ 
-                    'status' => 500, 
-                    'message' => $e->getMessage()
-                ];
-
+                $status = 500;
+                $message = $e->getMessage();
+                $response = [ $status, $message ];
                 return MainResource::collection($response);
+
             } catch (Google_Exception $e) {
                 Log::alert('A service error occurred: ');
                 Log::alert($e->getMessage());
-                $response = [ 
-                    'status' => 500, 
-                    'message' => $e->getMessage()
-                ];
-
+                $status = 500;
+                $message = $e->getMessage();
+                $response = [ $status, $message ];
                 return MainResource::collection($response);
             }
             
         }
-
-        $response = [ 
-            'status' => 404, 
-            'message' => 'Not Found'
-        ];
-
+        
+        $status = 404;
+        $message = 'Not Found';
+        $response = [ $status, $message ];
         return MainResource::collection($response);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 }

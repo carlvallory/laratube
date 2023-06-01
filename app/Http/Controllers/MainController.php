@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Http\Resources\MainResource;
 
 class MainController extends Controller
 {
@@ -130,7 +129,7 @@ class MainController extends Controller
                         'status' => 200, 
                         'message' => 'Video title updated successfully!'
                     ];
-                    return MainResource::collection($response);
+                    return response()->json($response);
 
                 } else {
                     $response = [ 
@@ -138,7 +137,7 @@ class MainController extends Controller
                         'message' => 'Empty Response'
                     ];
     
-                    return MainResource::collection($response);
+                    return response()->json($response);
                 }
             } catch (Google_Service_Exception $e) {
                 Log::alert('A service error occurred: ');
@@ -149,7 +148,7 @@ class MainController extends Controller
                     'message' => $e->getMessage()
                 ];
 
-                return MainResource::collection($response);
+                return response()->json($response);
             } catch (Google_Exception $e) {
                 Log::alert('A service error occurred: ');
                 Log::alert($e->getMessage());
@@ -158,7 +157,7 @@ class MainController extends Controller
                     'message' => $e->getMessage()
                 ];
 
-                return MainResource::collection($response);
+                return response()->json($response);
             }
             
         }
@@ -168,7 +167,7 @@ class MainController extends Controller
             'message' => 'Not Found'
         ];
 
-        return MainResource::collection($response);
+        return response()->json($response);
     }
 
     /**

@@ -16,9 +16,10 @@ class MainController extends Controller
      */
     public function index(Request $request)
     {
-        $array = [ "return" => true ];
+        $arr = [ "return" => true ];
+        $obj    = collect($arr);
         
-        return MainResource::collection($array);
+        return MainResource::collection($obj);
     }
 
     /**

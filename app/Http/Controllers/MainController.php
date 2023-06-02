@@ -99,6 +99,7 @@ class MainController extends Controller
             $authUrl = $client->createAuthUrl();
             return redirect($authUrl);
         } else {
+            Log::info(request()->get('code'));
             $client->authenticate(request()->get('code'));
             $token = $client->getAccessToken();
             $client->setAccessToken($token);

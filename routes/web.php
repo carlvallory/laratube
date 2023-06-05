@@ -16,4 +16,5 @@ use Illuminate\Support\Facades\Log;
 
 
 Route::get('/youtube', [MainController::class, 'index']);
+Route::get('/youtube/auth', [MainController::class, 'create']);
 Route::get('/youtube/update-title', [MainController::class, 'update']);

@@ -103,79 +103,81 @@ class MainController extends Controller
         $client->setRedirectUri(config('google.redirect_url'));
         $client->setScopes(\Google_Service_YouTube::YOUTUBE_FORCE_SSL);
     
-        if (!request()->has('code')) {
-            $authUrl = $client->createAuthUrl();
-            return redirect($authUrl);
+        if (!request()->has('accesstoken')) {
+            if (!request()->has('code')) {
+                $authUrl = $client->createAuthUrl();
+                return redirect($authUrl);
+            } else {
+                Log::info(request()->get('code'));
+                $client->authenticate(request()->get('code'));
+                $token = $client->getAccessToken();
+                
+            }
         } else {
-            Log::info(request()->get('code'));
-            $client->authenticate(request()->get('code'));
-            $token = $client->getAccessToken();
-            $client->setAccessToken($token);
-    
-            // Update video title
-            $youtube = new \Google_Service_YouTube($client);
-    
-            try{
-                
-                $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
-    
-                if (!empty($listResponse)) {
-    
-                    $video = $listResponse[0];
-                    $videoSnippet = $video->getSnippet();
-    
-                    Log::debug($videoSnippet->title);
-    
-                    $videoSnippet->title      = $newTitle;
-                    $videoSnippet->categoryId = '1'; 
+            $token = request()->get('accesstoken');
+        }
+
+        $client->setAccessToken($token);
+        
+        // Update video title
+        $youtube = new \Google_Service_YouTube($client);
+        
+        try{
                     
-                    $updateResponse = $youtube->videos->update("snippet", $video);
-                    $responseLog = $updateResponse['snippet'];
-    
-                    Log::debug($responseLog->title);
-    
-                    $response = [ 
-                        'status' => 200, 
-                        'message' => 'Video title updated successfully!'
-                    ];
-                    return response()->json($response);
-
-                } else {
-                    $response = [ 
-                        'status' => 500, 
-                        'message' => 'Empty Response'
-                    ];
-    
-                    return response()->json($response);
-                }
-            } catch (Google_Service_Exception $e) {
-                Log::alert('A service error occurred: ');
-                Log::alert($e->getMessage());
-                
+            $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
+        
+            if (!empty($listResponse)) {
+        
+                $video = $listResponse[0];
+                $videoSnippet = $video->getSnippet();
+        
+                Log::debug($videoSnippet->title);
+        
+                $videoSnippet->title      = $newTitle;
+                $videoSnippet->categoryId = '1'; 
+                        
+                $updateResponse = $youtube->videos->update("snippet", $video);
+                $responseLog = $updateResponse['snippet'];
+        
+                Log::debug($responseLog->title);
+        
                 $response = [ 
-                    'status' => 500, 
-                    'message' => $e->getMessage()
+                    'status' => 200, 
+                    'message' => 'Video title updated successfully!'
                 ];
-
                 return response()->json($response);
-            } catch (Google_Exception $e) {
-                Log::alert('A service error occurred: ');
-                Log::alert($e->getMessage());
+
+            } else {
                 $response = [ 
                     'status' => 500, 
-                    'message' => $e->getMessage()
-                ];
-
+                    'message' => 'Empty Response'
+                    ];
                 return response()->json($response);
             }
-            
+        } catch (Google_Service_Exception $e) {
+            Log::alert('A service error occurred: ');
+            Log::alert($e->getMessage());
+                    
+            $response = [ 
+                'status' => 500, 
+                'message' => $e->getMessage()
+            ];
+
+            return response()->json($response);
+        } catch (Google_Exception $e) {
+            Log::alert('A service error occurred: ');
+            Log::alert($e->getMessage());
+            $response = [ 
+                'status' => 500, 
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response);
         }
 
         $response = [ 
             'status' => 404, 
             'message' => 'Not Found'
         ];
-
         return response()->json($response);
     }
 

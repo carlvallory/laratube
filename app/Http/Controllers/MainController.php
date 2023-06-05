@@ -106,6 +106,7 @@ class MainController extends Controller
         if (!request()->has('accesstoken')) {
             if (!request()->has('code')) {
                 $authUrl = $client->createAuthUrl();
+                Log::debug($authUrl);
                 return redirect($authUrl);
             } else {
                 Log::info(request()->get('code'));

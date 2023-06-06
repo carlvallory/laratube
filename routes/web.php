@@ -24,5 +24,5 @@ Route::get('/youtube/update-title', [MainController::class, 'update']);
 
 Route::get('/sheet/schedule', [SheetController::class, 'update']);
 
-Route::get('youtube/channel/list/id/{id}', [TubeController::class, 'show']);
-Route::get('auth/google', [AuthController::class, 'create']);
+Route::get('/youtube/channel/list/id/{id}', [TubeController::class, 'show']);
+Route::get('/auth/google', [AuthController::class, 'create']);

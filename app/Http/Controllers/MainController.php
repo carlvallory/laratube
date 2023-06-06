@@ -98,9 +98,9 @@ class MainController extends Controller
         }
 
         $client = new \Google_Client();
-        $client->setClientId(config('google.client_id'));
-        $client->setClientSecret(config('google.client_secret'));
-        $client->setRedirectUri(config('google.redirect_url'));
+        $client->setClientId(config('google.auth.client_id'));
+        $client->setClientSecret(config('google.auth.client_secret'));
+        $client->setRedirectUri(config('google.auth.redirect_url'));
         $client->setScopes(\Google_Service_YouTube::YOUTUBE_FORCE_SSL);
     
         if (!request()->has('accesstoken')) {

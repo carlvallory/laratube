@@ -10,6 +10,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Throwable;
 
+use App\Http\Controllers\MainController;
+
 class SheetController extends Controller
 {
     /**
@@ -142,6 +144,8 @@ class SheetController extends Controller
 
                         if($init == false) {
                             //CODE AUTH OR ACCESS TOKEN
+                            $result = (new MainController)->updateVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
+                            dd($result);
                             $renamedVideo = $this->renameVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
                             Log::info($renamedVideo);
                         } else { 

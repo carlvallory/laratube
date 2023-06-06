@@ -351,15 +351,15 @@ class SheetController extends Controller
         }
     }
 
-    private function laratubeApi_get($url = null) {
+    private function laratubeApi_get($url) {
         $api_key = config('google.youtube.api_key');
         $APP_URL = config("google.application.url");
-        $AUTH_REDIRECT = config("google.application.auth_redirect");
+
         $headers = [
             "x-api-key" => $api_key
         ];
 
-        $laratubeURL = $APP_URL . "/" . $AUTH_REDIRECT;
+        $laratubeURL = $APP_URL . "/youtube" . $url;
 
         try {
             $response = Http::withHeaders($headers)->get($laratubeURL);

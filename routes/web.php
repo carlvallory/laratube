@@ -1,5 +1,7 @@
 <?php
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\SheetController;
+use App\Http\Controllers\TubeController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 
@@ -18,3 +20,7 @@ use Illuminate\Support\Facades\Log;
 Route::get('/youtube', [MainController::class, 'index']);
 Route::get('/youtube/auth', [MainController::class, 'create']);
 Route::get('/youtube/update-title', [MainController::class, 'update']);
+
+Route::get('/sheet/schedule', [SheetController::class, 'update']);
+
+Route::get('youtube/channel/list/id/{id}', [TubeController::class, 'show']);

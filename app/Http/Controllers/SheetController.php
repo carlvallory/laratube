@@ -233,10 +233,8 @@ class SheetController extends Controller
                                 //$result = (new MainController)->updateVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
                                 //$renamedVideo = $this->renameVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
 
-                                if (!(Session::has('videoId') && Session::has('newTitle'))) {
-                                    Session::put('videoId', $videoId);
-                                    Session::put('newTitle', $newTitle);
-                                }
+                                Session::put('videoId', $videoId);
+                                Session::put('newTitle', $newTitle);
 
                                 $authUrl = $client->createAuthUrl();
                                 Log::info($authUrl);

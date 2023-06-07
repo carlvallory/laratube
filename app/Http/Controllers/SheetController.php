@@ -89,6 +89,8 @@ class SheetController extends Controller
             if (Session::has('videoId') && Session::has('newTitle')) {
                 $videoId = Session::get('videoId');
                 $newTitle = Session::get('newTitle');
+                Session::forget('videoId');
+                Session::forget('newTitle');
             } else {
                 $response = [ 
                     'status' => 500, 
@@ -107,6 +109,7 @@ class SheetController extends Controller
             
             try{
                         
+                Log::debug($videoId);
                 $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
             
                 if (!empty($listResponse)) {
@@ -226,13 +229,11 @@ class SheetController extends Controller
 
                             if($init == false) {
                                 //CODE AUTH OR ACCESS TOKEN
+                                $videoId = $youtubeResponse["youtube"]["video"]["videoId"];
                                 //$result = (new MainController)->updateVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
                                 //$renamedVideo = $this->renameVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
 
-                                if (Session::has('videoId') && Session::has('newTitle')) {
-                                    $videoId = Session::get('videoId');
-                                    $newTitle = Session::get('newTitle');
-                                } else {
+                                if (!(Session::has('videoId') && Session::has('newTitle'))) {
                                     Session::put('videoId', $videoId);
                                     Session::put('newTitle', $newTitle);
                                 }
@@ -494,7 +495,6 @@ class SheetController extends Controller
         try {
           $url = "/update-title?v=".$videoId."&title=".$newTitle;
           $data = $this->laratubeApi_get($url);
-          Log::debug($data);
           return $data;
         } catch (Throwable $e) {
             Log::error($e);

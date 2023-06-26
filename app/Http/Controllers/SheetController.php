@@ -110,7 +110,11 @@ class SheetController extends Controller
                 Log::info(request()->get('code'));
                 $client->authenticate(request()->get('code'));
                 $token = $client->getAccessToken();
-                Storage::put('refresh_token.txt', $token['refresh_token']);
+                if($token) {
+                    if(array_key_exists('refresh_token', $token)) {
+                        Storage::put('refresh_token.txt', $token['refresh_token']);
+                    }
+                }
                 $client->setAccessToken($token);
             
                 // Update video title

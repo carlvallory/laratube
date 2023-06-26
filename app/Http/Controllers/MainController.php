@@ -120,12 +120,13 @@ class MainController extends Controller
                     Log::info(request()->get('code'));
                     $client->authenticate(request()->get('code'));
                     $token = $client->getAccessToken();
+                    Storage::put('refresh_token.txt', $token['refresh_token']);
                 }
             } else {
                 $token = request()->get('accesstoken');
             }
 
-            Storage::put('refresh_token.txt', $token['refresh_token']);
+            
         }
 
         $client->fetchAccessTokenWithRefreshToken($refreshToken);

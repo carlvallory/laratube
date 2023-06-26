@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Throwable;
@@ -83,86 +84,197 @@ class SheetController extends Controller
         $client->setClientSecret(config('google.auth.client_secret'));
         $client->setRedirectUri(config('google.auth.redirect_url'));
         $client->setScopes(\Google_Service_YouTube::YOUTUBE_FORCE_SSL);  
+        //Refresh Token
+        $client->setAccessType('offline');
+        $client->setApprovalPrompt('force');
 
-        if (request()->has('code')) {
-
-            if (Session::has('videoId') && Session::has('newTitle')) {
-                $videoId = Session::get('videoId');
-                $newTitle = Session::get('newTitle');
-                Session::forget('videoId');
-                Session::forget('newTitle');
-            } else {
-                $response = [ 
-                    'status' => 500, 
-                    'error' => 'Video Id or Title is Empty'
-                    ];
-                return response()->json($response);
-            }
-
-            Log::info(request()->get('code'));
-            $client->authenticate(request()->get('code'));
-            $token = $client->getAccessToken();
-            $client->setAccessToken($token);
+        $refreshToken = Storage::get('refresh_token.txt');
         
-            // Update video title
-            $youtube = new \Google_Service_YouTube($client);
-            
-            try{
-                        
-                Log::debug($videoId);
-                $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
-            
-                if (!empty($listResponse)) {
-            
-                    $video = $listResponse[0];
-                    $videoSnippet = $video->getSnippet();
-            
-                    Log::debug($videoSnippet->title);
-            
-                    $videoSnippet->title      = $newTitle;
-                    $videoSnippet->categoryId = '1'; 
-                            
-                    $updateResponse = $youtube->videos->update("snippet", $video);
-                    $responseLog = $updateResponse['snippet'];
-            
-                    Log::debug($responseLog->title);
-            
-                    $response = [ 
-                        'status'    => 200, 
-                        'message'   => 'Video title updated successfully!',
-                        'updated'   => true
-                    ];
-                    return response()->json($response);
+        if(!$refreshToken) {
+            if (request()->has('code')) {
 
+                if (Session::has('videoId') && Session::has('newTitle')) {
+                    $videoId = Session::get('videoId');
+                    $newTitle = Session::get('newTitle');
+                    Session::forget('videoId');
+                    Session::forget('newTitle');
                 } else {
                     $response = [ 
                         'status' => 500, 
-                        'message' => 'Empty Response'
+                        'error' => 'Video Id or Title is Empty',
+                        'code'  => true
                         ];
                     return response()->json($response);
                 }
-            } catch (Google_Service_Exception $e) {
-                Log::alert('A service error occurred: ');
-                Log::alert($e->getMessage());
-                        
-                $response = [ 
-                    'status' => 500, 
-                    'message' => $e->getMessage()
-                ];
 
-                return response()->json($response);
-            } catch (Google_Exception $e) {
-                Log::alert('A service error occurred: ');
-                Log::alert($e->getMessage());
+                Log::info(request()->get('code'));
+                $client->authenticate(request()->get('code'));
+                $token = $client->getAccessToken();
+                Storage::put('refresh_token.txt', $token['refresh_token']);
+                $client->setAccessToken($token);
+            
+                // Update video title
+                $youtube = new \Google_Service_YouTube($client);
+                
+                try {
+                            
+                    Log::debug($videoId);
+                    $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
+                
+                    if (!empty($listResponse)) {
+                
+                        $video = $listResponse[0];
+                        $videoSnippet = $video->getSnippet();
+                
+                        Log::debug($videoSnippet->title);
+                
+                        $videoSnippet->title      = $newTitle;
+                        $videoSnippet->categoryId = '1'; 
+                                
+                        $updateResponse = $youtube->videos->update("snippet", $video);
+                        $responseLog = $updateResponse['snippet'];
+                
+                        Log::debug($responseLog->title);
+                
+                        $response = [ 
+                            'status'    => 200, 
+                            'message'   => 'Video title updated successfully!',
+                            'code'  => true,
+                            'updated'   => true
+                        ];
+                        return response()->json($response);
+
+                    } else {
+                        $response = [ 
+                            'status' => 500, 
+                            'message' => 'Empty Response',
+                            'code'  => true
+                            ];
+                        return response()->json($response);
+                    }
+                } catch (Google_Service_Exception $e) {
+                    Log::alert('A service error occurred: ');
+                    Log::alert($e->getMessage());
+                            
+                    $response = [ 
+                        'status' => 500, 
+                        'message' => $e->getMessage(),
+                        'code'  => true
+                    ];
+
+                    return response()->json($response);
+                } catch (Google_Exception $e) {
+                    Log::alert('A service error occurred: ');
+                    Log::alert($e->getMessage());
+                    $response = [ 
+                        'status' => 500, 
+                        'message' => $e->getMessage(),
+                        'code'  => true
+                    ];
+                    return response()->json($response);
+                }
+
+            } else {
+
+                $SHEETID = config("google.sheet.id");
+                $APIKEY = config("google.sheet.api_key");
+
+                $dt     = Carbon::now()->timezone("America/Asuncion");
+                $today  = $dt->format('l');
+                $hour   = $dt->format("H");
+                $minute = $dt->format("i");
+
+                $status = false;
+                $init = false;
+                $run = false;
+                
+                $platformResult = [ "updated" => false ];
+                $videoResource = [ "updated" => false ];
+                $code = null;
+                $renamedVideo = false;
+                
+                $videoId = false;
+                $newTitle = "";
+
+                $url = "/spreadsheets/".$SHEETID."/values/".$today."!A1:C12?key=".$APIKEY;
+
+                $jsonData = $this->getJson($url);
+
+                foreach( $jsonData as $index => $row) {
+                    if($index == "values") {
+                        foreach($row as $index => $values) {
+                            if($index != 0) {
+                                $startHour = explode(":",$values[0])[0];
+                                $startMinute = explode(":",$values[0])[1];
+                                if($startHour == $hour && $startMinute == $minute) {
+                                    Log::debug($startHour);
+                                    Log::debug($startMinute);
+                                    $newTitle = $values[2];
+                                    $status = true;
+                                    $init = true;
+                                }
+                            }
+
+                            if($index != 0) {
+                                $endHour = explode(":",$values[1])[0];
+                                $endMinute = explode(":",$values[1])[1];
+                                if($endHour == $hour && $endMinute == $minute) {
+                                    Log::debug($endHour);
+                                    Log::debug($endMinute);
+                                    $newTitle = $values[2];
+                                    $status = true;
+                                    $init = false;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if($status == true) {
+                    $run = true;
+                    $platformResult = $this->getUpdate($status, $init, $run);
+
+                    if(array_key_exists("youtube", $platformResult)){
+                        if(array_key_exists("channel", $platformResult["youtube"])){
+                            if(array_key_exists("url", $platformResult["youtube"]["channel"])){
+                                $videoResource = $this->getVideo($platformResult["youtube"]["channel"]["url"]);
+                                $youtubeResponse = $videoResource['youtubeResponse'];
+
+                                if($init == false) {
+                                    //CODE AUTH OR ACCESS TOKEN
+                                    $videoId = $youtubeResponse["youtube"]["video"]["videoId"];
+                                    //$result = (new MainController)->updateVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
+                                    //$renamedVideo = $this->renameVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
+
+                                    Session::put('videoId', $videoId);
+                                    Session::put('newTitle', $newTitle);
+
+                                    $authUrl = $client->createAuthUrl();
+                                    Log::info($authUrl);
+                                    return redirect($authUrl);
+                                } else { 
+                                    Log::info($youtubeResponse); 
+                                }
+                            } else {
+                                Log::alert("cant find the channel");
+                            }
+                        }
+                    }
+
+                    $run = false;
+                    $status = false;
+                }
+                
+
                 $response = [ 
-                    'status' => 500, 
-                    'message' => $e->getMessage()
+                    'status' => 200, 
+                    'message' => $platformResult["updated"],
+                    'code'  => true
                 ];
                 return response()->json($response);
             }
-
         } else {
-
+            //IF HAS REFRESH TOKEN
             $SHEETID = config("google.sheet.id");
             $APIKEY = config("google.sheet.api_key");
 
@@ -174,12 +286,12 @@ class SheetController extends Controller
             $status = false;
             $init = false;
             $run = false;
-            
+                
             $platformResult = [ "updated" => false ];
             $videoResource = [ "updated" => false ];
             $code = null;
             $renamedVideo = false;
-            
+                
             $videoId = false;
             $newTitle = "";
 
@@ -235,12 +347,7 @@ class SheetController extends Controller
 
                                 Session::put('videoId', $videoId);
                                 Session::put('newTitle', $newTitle);
-
-                                $authUrl = $client->createAuthUrl();
-                                Log::info($authUrl);
-                                return redirect($authUrl);
-                            } else { 
-                                Log::info($youtubeResponse); 
+                                Log::info($youtubeResponse);
                             }
                         } else {
                             Log::alert("cant find the channel");
@@ -251,13 +358,82 @@ class SheetController extends Controller
                 $run = false;
                 $status = false;
             }
-            
 
-            $response = [ 
-                'status' => 200, 
-                'message' => $platformResult["updated"]
-            ];
-            return response()->json($response);
+            if (Session::has('videoId') && Session::has('newTitle')) {
+                $videoId = Session::get('videoId');
+                $newTitle = Session::get('newTitle');
+                Session::forget('videoId');
+                Session::forget('newTitle');
+            } else {
+                $response = [ 
+                    'status' => 500, 
+                    'error' => 'Video Id or Title is Empty',
+                    'code'  => false
+                    ];
+                return response()->json($response);
+            }
+
+            
+            $client->fetchAccessTokenWithRefreshToken($refreshToken);
+
+            // Update video title
+            $youtube = new \Google_Service_YouTube($client);
+                
+            try{
+                $listResponse = $youtube->videos->listVideos('snippet', ['id' => $videoId]);
+            
+                if (!empty($listResponse)) {
+            
+                    $video = $listResponse[0];
+                    $videoSnippet = $video->getSnippet();
+            
+                    Log::debug($videoSnippet->title);
+            
+                    $videoSnippet->title      = $newTitle;
+                    $videoSnippet->categoryId = '1'; 
+                            
+                    $updateResponse = $youtube->videos->update("snippet", $video);
+                    $responseLog = $updateResponse['snippet'];
+            
+                    Log::debug($responseLog->title);
+            
+                    $response = [ 
+                        'status'    => 200, 
+                        'message'   => 'Video title updated successfully!',
+                        'code'  => false,
+                        'updated'   => true
+                    ];
+                    return response()->json($response);
+
+                } else {
+                    $response = [ 
+                        'status' => 500, 
+                        'message' => 'Empty Response',
+                        'code'  => false
+                        ];
+                    return response()->json($response);
+                }
+            } catch (Google_Service_Exception $e) {
+                Log::alert('A service error occurred: ');
+                Log::alert($e->getMessage());
+                        
+                $response = [ 
+                    'status' => 500, 
+                    'message' => $e->getMessage(),
+                    'code'  => false
+                ];
+
+                return response()->json($response);
+            } catch (Google_Exception $e) {
+                Log::alert('A service error occurred: ');
+                Log::alert($e->getMessage());
+                $response = [ 
+                    'status' => 500, 
+                    'message' => $e->getMessage(),
+                    'code'  => false
+                ];
+                return response()->json($response);
+            }
         }
     }
 

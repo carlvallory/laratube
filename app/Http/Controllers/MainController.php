@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class MainController extends Controller
 {
@@ -102,23 +103,33 @@ class MainController extends Controller
         $client->setClientSecret(config('google.auth.client_secret'));
         $client->setRedirectUri(config('google.auth.redirect_url'));
         $client->setScopes(\Google_Service_YouTube::YOUTUBE_FORCE_SSL);
+        //Refresh Token
+        $client->setAccessType('offline');
+        $client->setApprovalPrompt('force');
+
+        $refreshToken = Storage::get('refresh_token.txt');
+
+        if(!$refreshToken) {
     
-        if (!request()->has('accesstoken')) {
-            if (!request()->has('code')) {
-                $authUrl = $client->createAuthUrl();
-                Log::debug($authUrl);
-                return redirect($authUrl);
+            if (!request()->has('accesstoken')) {
+                if (!request()->has('code')) {
+                    $authUrl = $client->createAuthUrl();
+                    Log::debug($authUrl);
+                    return redirect($authUrl);
+                } else {
+                    Log::info(request()->get('code'));
+                    $client->authenticate(request()->get('code'));
+                    $token = $client->getAccessToken();
+                }
             } else {
-                Log::info(request()->get('code'));
-                $client->authenticate(request()->get('code'));
-                $token = $client->getAccessToken();
-                
+                $token = request()->get('accesstoken');
             }
-        } else {
-            $token = request()->get('accesstoken');
+
+            Storage::put('refresh_token.txt', $token['refresh_token']);
         }
 
-        $client->setAccessToken($token);
+        $client->fetchAccessTokenWithRefreshToken($refreshToken);
+        //$client->setAccessToken($token);
         
         // Update video title
         $youtube = new \Google_Service_YouTube($client);

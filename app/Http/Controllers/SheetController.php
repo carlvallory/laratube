@@ -287,6 +287,9 @@ class SheetController extends Controller
             $hour   = $dt->format("H");
             $minute = $dt->format("i");
 
+
+            Log::info($dt);
+
             $status = false;
             $init = false;
             $run = false;

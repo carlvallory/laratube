@@ -86,9 +86,9 @@ class SheetController extends Controller
         $client->setScopes(\Google_Service_YouTube::YOUTUBE_FORCE_SSL);  
         //Refresh Token
         $client->setAccessType('offline');
-        $client->setApprovalPrompt('force');
+        $client->setApprovalPrompt('force'); // Using "consent" ensures that your application always receives a refresh token.
 
-        $refreshToken = Storage::get('refresh_token.txt');
+        $refreshToken = Storage::get(base64_decode('refresh_token.txt')) ?? base64_decode(config("google.auth.refresh_token"));
         
         if(!$refreshToken) {
             if (request()->has('code')) {
@@ -112,7 +112,7 @@ class SheetController extends Controller
                 $token = $client->getAccessToken();
                 if($token) {
                     if(array_key_exists('refresh_token', $token)) {
-                        Storage::put('refresh_token.txt', $token['refresh_token']);
+                        Storage::put(base64_encode('refresh_token.txt'), $token['refresh_token']);
                     }
                 }
                 $client->setAccessToken($token);

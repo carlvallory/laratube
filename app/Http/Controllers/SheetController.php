@@ -107,7 +107,6 @@ class SheetController extends Controller
                     return response()->json($response);
                 }
 
-                Log::info(request()->get('code'));
                 $client->authenticate(request()->get('code'));
                 $token = $client->getAccessToken();
                 if($token) {
@@ -344,6 +343,7 @@ class SheetController extends Controller
                     if(array_key_exists("channel", $platformResult["youtube"])){
                         if(array_key_exists("url", $platformResult["youtube"]["channel"])){
                             $videoResource = $this->getVideo($platformResult["youtube"]["channel"]["url"]);
+                            Log::debug($videoResource);
                             $youtubeResponse = $videoResource['youtubeResponse'];
 
                             if($init == false) {

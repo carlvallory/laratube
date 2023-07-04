@@ -477,7 +477,7 @@ class SheetController extends Controller
 
     private function getVideo($channelUrl) {
         $data = $this->getVideoApi($channelUrl);
-        if(!empty(json_decode($data, true))) { return $data; }
+        if(!empty($data) && $data !== false) { return $data; }
         if($data === false) { return array(); }
         Log::alert("getVideo: fail");
         return array();

@@ -405,11 +405,17 @@ class SheetController extends Controller
             
                     Log::debug($videoSnippet->title);
             
-                    $videoSnippet->title      = $newTitle;
+                    $cTitle = Str::ucfirst(Str::camel($newTitle));
+                    $dte     = Carbon::now()->timezone("America/Asuncion")->format('d/m/Y');
+                    $newVideoTitle = "#" . $cTitle . " - " . $dte . " - Universo 970 AM - Paraguay";
+
+                    $videoSnippet->title      = $newVideoTitle;
                     $videoSnippet->categoryId = '1'; 
                             
                     $updateResponse = $youtube->videos->update("snippet", $video);
                     $responseLog = $updateResponse['snippet'];
+
+                    $renamedVideo = true;
             
                     Log::debug($responseLog->title);
             

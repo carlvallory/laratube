@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
+use Exception;
 use Throwable;
 
 use App\Http\Controllers\MainController;
@@ -569,9 +572,15 @@ class SheetController extends Controller
      */
     private function sheetApi_get($url) {
         try {
-            $response = Http::get("https://sheets.googleapis.com/v4".$url);
+            $response = Http::retry(3, 10000, function (Exception $exception, PendingRequest $request) {
+                return $exception instanceof ConnectionException;
+            })->get("https://sheets.googleapis.com/v4".$url);
+
             $jsonData = $response->json();
             return $jsonData;
+        } catch (Exception $e) {
+            Log::alert($e);
+            return false;
         } catch (Throwable $e) {
             Log::alert($e);
             return false;

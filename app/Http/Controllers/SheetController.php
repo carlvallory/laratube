@@ -469,7 +469,7 @@ class SheetController extends Controller
 
     private function getJson($url) {
         $data = $this->sheetApi_get($url);
-        if(!empty(json_decode($data, true))) { return $data; }
+        if(!empty($data) && $data !== false) { return $data; }
         if($data === false) { return array(); }
         Log::alert("getJson: fail");
         return array();

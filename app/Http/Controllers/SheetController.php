@@ -361,6 +361,7 @@ class SheetController extends Controller
                                     Log::info($youtubeResponse);
                                 }
                             } else {
+                                Log::debug($platformResult["youtube"]["channel"]["url"]);
                                 Log::debug($videoResource);
                                 Log::alert("cant get a youtube Response");
                             }

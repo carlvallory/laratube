@@ -346,18 +346,23 @@ class SheetController extends Controller
                     if(array_key_exists("channel", $platformResult["youtube"])){
                         if(array_key_exists("url", $platformResult["youtube"]["channel"])){
                             $videoResource = $this->getVideo($platformResult["youtube"]["channel"]["url"]);
-                            Log::debug($videoResource);
-                            $youtubeResponse = $videoResource['youtubeResponse'];
+                            
+                            if(array_key_exists("youtubeResponse", $videoResource)){
+                                $youtubeResponse = $videoResource['youtubeResponse'];
+                                    
+                                if($init == false) {
+                                    //CODE AUTH OR ACCESS TOKEN
+                                    $videoId = $youtubeResponse["youtube"]["video"]["videoId"];
+                                    //$result = (new MainController)->updateVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
+                                    //$renamedVideo = $this->renameVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
 
-                            if($init == false) {
-                                //CODE AUTH OR ACCESS TOKEN
-                                $videoId = $youtubeResponse["youtube"]["video"]["videoId"];
-                                //$result = (new MainController)->updateVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
-                                //$renamedVideo = $this->renameVideo($youtubeResponse["youtube"]["video"]["videoId"], $newTitle);
-
-                                Session::put('videoId', $videoId);
-                                Session::put('newTitle', $newTitle);
-                                Log::info($youtubeResponse);
+                                    Session::put('videoId', $videoId);
+                                    Session::put('newTitle', $newTitle);
+                                    Log::info($youtubeResponse);
+                                }
+                            } else {
+                                Log::debug($videoResource);
+                                Log::alert("cant get a youtube Response");
                             }
                         } else {
                             Log::alert("cant find the channel");
@@ -467,6 +472,14 @@ class SheetController extends Controller
         if(!empty(json_decode($data, true))) { return $data; }
         if($data === false) { return array(); }
         Log::alert("getJson: fail");
+        return array();
+    }
+
+    private function getVideo($channelUrl) {
+        $data = $this->getVideoApi($channelUrl);
+        if(!empty(json_decode($data, true))) { return $data; }
+        if($data === false) { return array(); }
+        Log::alert("getVideo: fail");
         return array();
     }
 
@@ -665,15 +678,20 @@ class SheetController extends Controller
     /**
      * CUSTOM API
      */
-
-    private function getVideo($channelUrl) {
+    private function getVideoApi($channelUrl) {
         $APP_URL = config("google.application.url");
         try {
-          $channelId = $this->parseChannelUrl($channelUrl);
-          $tubeResponse = Http::get($APP_URL."/youtube/channel/list/id/".$channelId);
-          $youtubeResponse = $tubeResponse->json();
-          return $youtubeResponse;
+            $channelId = $this->parseChannelUrl($channelUrl);
+            $tubeResponse = Http::retry(3, 10000, function (Exception $exception, PendingRequest $request) {
+                return $exception instanceof ConnectionException;
+            })->get($APP_URL."/youtube/channel/list/id/".$channelId);
+          
+            $youtubeResponse = $tubeResponse->json();
+            return $youtubeResponse;
 
+        } catch (Exception $e) {
+            Log::alert($e);
+            return false;
         } catch (Throwable $e) {
             Log::alert($e);
             return false;

@@ -464,7 +464,8 @@ class SheetController extends Controller
 
     private function getJson($url) {
         $data = $this->sheetApi_get($url);
-        return $data;
+        if(!empty(json_decode($data, true))) { return $data; }
+        return array();
     }
 
     private function getUpdate($status, $init, $run) {

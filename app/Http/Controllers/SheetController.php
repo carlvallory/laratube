@@ -359,6 +359,11 @@ class SheetController extends Controller
                                     Session::put('videoId', $videoId);
                                     Session::put('newTitle', $newTitle);
                                     Log::info($youtubeResponse);
+                                } else {
+                                    // INICIAR
+                                    $videoId = $youtubeResponse["youtube"]["video"]["videoId"];
+                                    Session::put('videoId', $videoId);
+                                    Session::put('newTitle', $newTitle);
                                 }
                             } else {
                                 Log::debug($platformResult["youtube"]["channel"]["url"]);
@@ -405,9 +410,7 @@ class SheetController extends Controller
             
                     Log::debug($videoSnippet->title);
             
-                    $cTitle = Str::ucfirst(Str::camel($newTitle));
-                    $dte     = Carbon::now()->timezone("America/Asuncion")->format('d/m/Y');
-                    $newVideoTitle = "#" . $cTitle . " - " . $dte . " - Universo 970 AM - Paraguay";
+                    $newVideoTitle = $this->renameVideoTitle($newTitle);
 
                     $videoSnippet->title      = $newVideoTitle;
                     $videoSnippet->categoryId = '1'; 
@@ -488,6 +491,14 @@ class SheetController extends Controller
         if($data === false) { return array(); }
         Log::alert("getVideo: fail");
         return array();
+    }
+
+    private function renameVideoTitle($title) {
+        $cTitle = Str::ucfirst(Str::camel($title));
+        $dte     = Carbon::now()->timezone("America/Asuncion")->format('d/m/Y');
+        $newVideoTitle = "#" . $cTitle . " - " . $dte . " - Universo 970 AM - Paraguay";
+
+        return $newVideoTitle;
     }
 
     private function getUpdate($status, $init, $run) {
